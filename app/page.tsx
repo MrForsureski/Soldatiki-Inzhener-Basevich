@@ -85,9 +85,8 @@ const PRODUCTS: Product[] = [
 
 const FILTERS = ['Все', '1812 год', 'Античность', 'Средневековье', 'XX век'];
 
-// Add the seller's numeric VK dialog URL here, for example:
-// https://vk.com/write123456789 (profile) or https://vk.com/write-123456789 (community).
-const VK_DIALOG_URL = '';
+const VK_PROFILE_URL = 'https://vk.ru/bibader';
+const VK_DIALOG_URL = 'https://vk.me/bibader';
 
 const money = (value: number) => `${new Intl.NumberFormat('ru-RU').format(value)} ₽`;
 
@@ -107,6 +106,7 @@ function SoldierScene({ tone, scale, badge }: { tone: string; scale: string; bad
 
 export default function Home() {
   const [filter, setFilter] = useState('Все');
+  const [search, setSearch] = useState('');
   const [cart, setCart] = useState<Record<string, number>>({});
   const [cartOpen, setCartOpen] = useState(false);
   const [orderCopied, setOrderCopied] = useState(false);
@@ -116,9 +116,13 @@ export default function Home() {
     return () => { document.body.style.overflow = ''; };
   }, [cartOpen]);
 
-  const filteredProducts = filter === 'Все'
-    ? PRODUCTS
-    : PRODUCTS.filter((product) => product.era === filter);
+  const filteredProducts = PRODUCTS.filter((product) => {
+    const matchesFilter = filter === 'Все' || product.era === filter;
+    const haystack = [product.title, product.era, product.scale, product.badge, product.description]
+      .join(' ')
+      .toLocaleLowerCase('ru-RU');
+    return matchesFilter && haystack.includes(search.trim().toLocaleLowerCase('ru-RU'));
+  });
 
   const cartItems = useMemo(() => PRODUCTS
     .filter((product) => cart[product.id])
@@ -187,14 +191,14 @@ export default function Home() {
   return (
     <main>
       <header className="site-header">
-        <a className="brand" href="#top" aria-label="Шеренга — на главную">
-          <span className="brand-mark">Ш</span>
-          <span>Шеренга<small>коллекционные миниатюры</small></span>
+        <a className="brand" href="#top" aria-label="Солдатики Инженер Басевич — на главную">
+          <img src="/logo-basevich.png" alt="" />
+          <span>Солдатики<small>Инженер Басевич</small></span>
         </a>
         <nav aria-label="Основная навигация">
           <a href="#catalog">Каталог</a>
           <a href="#delivery">Доставка</a>
-          <a href="#about">О коллекции</a>
+          <a href={VK_PROFILE_URL} target="_blank" rel="noreferrer">ВКонтакте</a>
         </nav>
         <button className="cart-button" type="button" onClick={() => setCartOpen(true)} aria-label={`Открыть заказ, товаров: ${cartCount}`}>
           Заказ <span>{cartCount}</span>
@@ -203,29 +207,16 @@ export default function Home() {
 
       <section className="hero" id="top">
         <div className="hero-copy">
-          <p className="eyebrow">Литьё, ручная роспись, история</p>
-          <h1>История,<br />собранная <em>в строю</em></h1>
+          <p className="eyebrow">Авторские коллекционные солдатики</p>
+          <h1>Солдатики<br /><em>Инженер Басевич</em></h1>
           <p className="hero-text">
-            Коллекционные солдатики и исторические миниатюры — от античности
-            до XX века. Отправляем бережно по всей России.
+            Каталог исторических наборов для коллекционеров. Выберите фигурки,
+            оформите заказ и согласуйте детали напрямую с автором во ВКонтакте.
           </p>
           <div className="hero-actions">
             <a className="primary-button" href="#catalog">Смотреть каталог</a>
             <span>Без онлайн-оплаты<br />заказ подтверждаем в ВК</span>
           </div>
-          <dl className="hero-stats">
-            <div><dt>6</dt><dd>исторических серий</dd></div>
-            <div><dt>54 мм</dt><dd>коллекционный формат</dd></div>
-            <div><dt>РФ</dt><dd>доставка почтой</dd></div>
-          </dl>
-        </div>
-        <div className="hero-art" aria-hidden="true">
-          <div className="hero-number">54</div>
-          <div className="hero-unit">мм</div>
-          <div className="hero-soldier hero-soldier--back"><i /><b /><em /></div>
-          <div className="hero-soldier"><i /><b /><em /></div>
-          <span className="hero-plinth" />
-          <p>Масштабная миниатюра<br />с музейной детализацией</p>
         </div>
       </section>
 
@@ -235,7 +226,19 @@ export default function Home() {
             <p className="eyebrow">Каталог коллекции</p>
             <h2>Выберите свою эпоху</h2>
           </div>
-          <p className="catalog-note">Все наборы в наличии<br />и готовы к отправке</p>
+          <label className="catalog-search">
+            <span>Поиск по каталогу</span>
+            <span className="search-box">
+              <span aria-hidden="true">⌕</span>
+              <input
+                type="search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Название, эпоха, масштаб…"
+                aria-label="Поиск по каталогу"
+              />
+            </span>
+          </label>
         </div>
 
         <div className="filters" role="group" aria-label="Фильтр по эпохе">
@@ -267,17 +270,13 @@ export default function Home() {
             </article>
           ))}
         </div>
-      </section>
-
-      <section className="about-section" id="about">
-        <div className="about-quote">
-          <p className="eyebrow">О коллекции</p>
-          <blockquote>«Каждая миниатюра — маленький памятник эпохе, форме и характеру.»</blockquote>
-        </div>
-        <div className="about-copy">
-          <p>Мы отбираем наборы с точной скульптурой, историчной экипировкой и аккуратной ручной росписью.</p>
-          <p>Перед отправкой проверяем каждую фигуру и закрепляем детали в индивидуальной упаковке.</p>
-        </div>
+        {!filteredProducts.length && (
+          <div className="search-empty" role="status">
+            <h3>Ничего не найдено</h3>
+            <p>Попробуйте другое название или сбросьте выбранную эпоху.</p>
+            <button type="button" onClick={() => { setSearch(''); setFilter('Все'); }}>Показать все наборы</button>
+          </div>
+        )}
       </section>
 
       <section className="delivery-section" id="delivery">
@@ -300,10 +299,10 @@ export default function Home() {
       </section>
 
       <footer>
-        <a className="brand brand--footer" href="#top"><span className="brand-mark">Ш</span><span>Шеренга<small>коллекционные миниатюры</small></span></a>
+        <a className="brand brand--footer" href="#top"><img src="/logo-basevich.png" alt="" /><span>Солдатики<small>Инженер Басевич</small></span></a>
         <p>Заказы подтверждаем в ВКонтакте.<br />Доставка Почтой России.</p>
-        <a href="#delivery">Условия доставки</a>
-        <p>© 2026 «Шеренга»</p>
+        <a href={VK_PROFILE_URL} target="_blank" rel="noreferrer">vk.ru/bibader</a>
+        <p>© 2026 «Инженер Басевич»</p>
       </footer>
 
       {cartOpen && (

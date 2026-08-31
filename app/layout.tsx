@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import './globals.css';
 
-const title = 'Шеренга — коллекционные игрушечные солдатики';
-const description = 'Каталог коллекционных солдатиков и исторических миниатюр. Выберите наборы, укажите адрес доставки и оформите заказ через ВКонтакте.';
+const title = 'Солдатики Инженер Басевич — официальный каталог';
+const description = 'Каталог коллекционных игрушечных солдатиков «Инженер Басевич». Выберите наборы, укажите адрес доставки и оформите заказ через ВКонтакте.';
 const siteOrigin = 'https://sherenga-soldiers.kukarekun505.chatgpt.site';
 
 export const metadata: Metadata = {
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     locale: 'ru_RU',
     type: 'website',
     url: siteOrigin,
-    images: [{ url: `${siteOrigin}/og.png`, width: 1200, height: 630, alt: 'Шеренга — коллекционные солдатики' }],
+    images: [{ url: `${siteOrigin}/og.png`, width: 1200, height: 630, alt: 'Солдатики Инженер Басевич' }],
   },
   twitter: {
     card: 'summary_large_image',
@@ -23,6 +23,7 @@ export const metadata: Metadata = {
     description,
     images: [`${siteOrigin}/og.png`],
   },
+  icons: { icon: '/logo-basevich.png' },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
