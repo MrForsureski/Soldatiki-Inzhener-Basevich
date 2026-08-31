@@ -1,11 +1,12 @@
 'use client';
 
 import bridge from '@vkontakte/vk-bridge';
-import { Check, MessageCircle, ShieldCheck } from 'lucide-react';
+import { Check, Link2, MessageCircle, ShieldCheck } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { VK_ORDER_COMMUNITY_ID, VK_ORDER_DIALOG_URL } from '../lib/vk-config';
 
 type SubmitState = 'initializing' | 'ready' | 'submitting' | 'success' | 'error';
+type SetupState = 'idle' | 'connecting' | 'success' | 'wrong-group' | 'error';
 
 function readOrderToken() {
   const url = new URL(window.location.href);
@@ -15,6 +16,7 @@ function readOrderToken() {
 
 export default function VkOrderPage() {
   const [state, setState] = useState<SubmitState>('initializing');
+  const [setupState, setSetupState] = useState<SetupState>('idle');
   const [orderToken, setOrderToken] = useState('');
   const [embedded, setEmbedded] = useState(false);
 
@@ -71,6 +73,20 @@ export default function VkOrderPage() {
     }
   };
 
+  const connectCommunity = async () => {
+    if (!embedded || setupState === 'connecting') return;
+
+    setSetupState('connecting');
+    try {
+      const result = await bridge.send('VKWebAppAddToCommunity');
+      setSetupState(
+        result.group_id === VK_ORDER_COMMUNITY_ID ? 'success' : 'wrong-group',
+      );
+    } catch {
+      setSetupState('error');
+    }
+  };
+
   return (
     <main className="vk-order-page">
       <header className="vk-order-brand">
@@ -82,7 +98,45 @@ export default function VkOrderPage() {
       </header>
 
       <section className="vk-order-card" aria-live="polite">
-        {state === 'success' ? (
+        {state !== 'initializing' && !tokenIsValid ? (
+          <>
+            <span className={`vk-order-icon${setupState === 'success' ? ' vk-order-icon--success' : ''}`}>
+              {setupState === 'success' ? <Check aria-hidden="true" /> : <Link2 aria-hidden="true" />}
+            </span>
+            <p className="eyebrow">Настройка приложения</p>
+            <h1>{setupState === 'success' ? 'Сообщество подключено' : 'Подключите сообщество'}</h1>
+            <p className="vk-order-lead">
+              {setupState === 'success'
+                ? 'Mini App установлен в сообщество заказов. Теперь можно переходить к настройке сервера и бота.'
+                : 'Это действие выполняется один раз владельцем или администратором нового сообщества.'}
+            </p>
+
+            {setupState === 'wrong-group' && (
+              <p className="vk-order-warning">
+                Выбрано другое сообщество. Повторите подключение и выберите «Заказы — Солдатики Инженера Басевича».
+              </p>
+            )}
+            {setupState === 'error' && (
+              <p className="vk-order-warning">
+                VK не разрешил подключение. Убедитесь, что вы администратор сообщества, и попробуйте ещё раз.
+              </p>
+            )}
+            {!embedded && (
+              <p className="vk-order-warning">Откройте этот экран по ссылке приложения внутри ВКонтакте.</p>
+            )}
+
+            {setupState !== 'success' && (
+              <button
+                className="vk-order-primary"
+                type="button"
+                disabled={!embedded || setupState === 'connecting'}
+                onClick={connectCommunity}
+              >
+                {setupState === 'connecting' ? 'Открываем список…' : 'Выбрать и подключить сообщество'}
+              </button>
+            )}
+          </>
+        ) : state === 'success' ? (
           <>
             <span className="vk-order-icon vk-order-icon--success"><Check aria-hidden="true" /></span>
             <p className="eyebrow">Запрос передан в VK</p>
@@ -109,12 +163,6 @@ export default function VkOrderPage() {
               <ShieldCheck aria-hidden="true" />
               <span>В VK передаётся одноразовый номер заказа, а не адрес в ссылке.</span>
             </div>
-
-            {!tokenIsValid && state !== 'initializing' && (
-              <p className="vk-order-warning">
-                Заказ не найден. Вернитесь в каталог и начните оформление ещё раз.
-              </p>
-            )}
 
             {!embedded && state !== 'initializing' && (
               <p className="vk-order-hint">Этот экран нужно открыть внутри приложения ВКонтакте.</p>
