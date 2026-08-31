@@ -307,13 +307,12 @@ export default function Home() {
       </section>
 
       <section className="cta-section">
-        <p className="eyebrow">Каталог</p>
-        <h2>Полки, армии,<br /><em>эпохи</em></h2>
         <a className="community-link" href={VK_COMMUNITY_URL} target="_blank" rel="noreferrer">
           <span className="community-link__mark" aria-hidden="true">VK</span>
           <span className="community-link__copy">
-            <small>Официальное сообщество</small>
-            <strong>Инженеръ Басевичъ</strong>
+            <small>Сообщество ВКонтакте</small>
+            <strong>СОЛДАТИКИ ИНЖЕНЕРА БАСЕВИЧА</strong>
+            <span>vk.ru/engineer_basevich</span>
           </span>
           <ArrowUpRight aria-hidden="true" size={28} strokeWidth={1.5} />
         </a>
