@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 const title = 'Солдатики Инженер Басевич — официальный каталог';
-const description = 'Каталог коллекционных игрушечных солдатиков «Инженер Басевич». Выберите наборы, укажите адрес доставки и оформите заказ через ВКонтакте.';
+const description = 'Петербургская пластическая миниатюра «Инженер Басевич»: исторические наборы масштаба 1:32 и оформление заказа через ВКонтакте.';
 const siteOrigin = 'https://sherenga-soldiers.kukarekun505.chatgpt.site';
 
 export const metadata: Metadata = {

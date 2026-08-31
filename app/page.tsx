@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { Search, ShoppingBag, X } from 'lucide-react';
 
 type Product = {
   id: string;
@@ -193,7 +194,10 @@ export default function Home() {
       <header className="site-header">
         <a className="brand" href="#top" aria-label="Солдатики Инженер Басевич — на главную">
           <img src="/logo-basevich.png" alt="" />
-          <span>Солдатики<small>Инженер Басевич</small></span>
+          <span>
+            <small>Солдатики</small>
+            <strong>Инженеръ Басевичъ</strong>
+          </span>
         </a>
         <nav aria-label="Основная навигация">
           <a href="#catalog">Каталог</a>
@@ -201,44 +205,55 @@ export default function Home() {
           <a href={VK_PROFILE_URL} target="_blank" rel="noreferrer">ВКонтакте</a>
         </nav>
         <button className="cart-button" type="button" onClick={() => setCartOpen(true)} aria-label={`Открыть заказ, товаров: ${cartCount}`}>
-          Заказ <span>{cartCount}</span>
+          <ShoppingBag aria-hidden="true" size={20} strokeWidth={1.7} />
+          <span>Заказ</span>
+          {cartCount > 0 && <small>({cartCount})</small>}
         </button>
       </header>
 
       <section className="hero" id="top">
+        <p className="hero-index" aria-hidden="true">Санкт-Петербург · масштаб 1:32 · классический пластик</p>
         <div className="hero-copy">
-          <p className="eyebrow">Авторские коллекционные солдатики</p>
-          <h1>Солдатики<br /><em>Инженер Басевич</em></h1>
+          <p className="eyebrow">Петербургская пластическая миниатюра</p>
+          <h1>Инженеръ<br /><em>Басевичъ</em></h1>
+          <p className="hero-lead">История России в масштабе 1:32.</p>
           <p className="hero-text">
-            Каталог исторических наборов для коллекционеров. Выберите фигурки,
-            оформите заказ и согласуйте детали напрямую с автором во ВКонтакте.
+            Авторские наборы Игоря Басевича — инженера-технолога и коллекционера
+            из Санкт-Петербурга. Классический пластик, ограниченные выпуски
+            и сюжеты от древности до истории России XX века.
           </p>
           <div className="hero-actions">
-            <a className="primary-button" href="#catalog">Смотреть каталог</a>
-            <span>Без онлайн-оплаты<br />заказ подтверждаем в ВК</span>
+            <a className="primary-button" href="#catalog">Открыть каталог</a>
+            <span>Классический пластик<br />ограниченные выпуски</span>
           </div>
+        </div>
+        <div className="hero-folio" aria-hidden="true">
+          <span>ИБ</span>
+          <small>Масштабная<br />миниатюра</small>
+          <b>1:32</b>
         </div>
       </section>
 
       <section className="catalog-section" id="catalog">
         <div className="section-heading">
-          <div>
-            <p className="eyebrow">Каталог коллекции</p>
-            <h2>Выберите свою эпоху</h2>
-          </div>
-          <label className="catalog-search">
-            <span>Поиск по каталогу</span>
-            <span className="search-box">
-              <span aria-hidden="true">⌕</span>
-              <input
-                type="search"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Название, эпоха, масштаб…"
-                aria-label="Поиск по каталогу"
-              />
-            </span>
-          </label>
+          <p className="eyebrow">Каталог исторических серий</p>
+          <h2>Полки, армии, эпохи</h2>
+        </div>
+
+        <div className="catalog-search" role="search">
+          <Search aria-hidden="true" size={23} strokeWidth={1.6} />
+          <input
+            type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Поиск по эпохе, армии или названию набора"
+            aria-label="Поиск по каталогу"
+          />
+          {search && (
+            <button type="button" onClick={() => setSearch('')} aria-label="Очистить поиск">
+              <X aria-hidden="true" size={19} strokeWidth={1.7} />
+            </button>
+          )}
         </div>
 
         <div className="filters" role="group" aria-label="Фильтр по эпохе">
@@ -299,7 +314,10 @@ export default function Home() {
       </section>
 
       <footer>
-        <a className="brand brand--footer" href="#top"><img src="/logo-basevich.png" alt="" /><span>Солдатики<small>Инженер Басевич</small></span></a>
+        <a className="brand brand--footer" href="#top">
+          <img src="/logo-basevich.png" alt="" />
+          <span><small>Солдатики</small><strong>Инженеръ Басевичъ</strong></span>
+        </a>
         <p>Заказы подтверждаем в ВКонтакте.<br />Доставка Почтой России.</p>
         <a href={VK_PROFILE_URL} target="_blank" rel="noreferrer">vk.ru/bibader</a>
         <p>© 2026 «Инженер Басевич»</p>
