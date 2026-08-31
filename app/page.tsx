@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { ArrowUpRight, Search, ShoppingBag, X } from 'lucide-react';
+import { VK_ORDER_DIALOG_URL, VK_PUBLIC_COMMUNITY_URL } from './lib/vk-config';
 
 type Product = {
   id: string;
@@ -86,8 +87,6 @@ const PRODUCTS: Product[] = [
 
 const FILTERS = ['Все', '1812 год', 'Античность', 'Средневековье', 'XX век'];
 
-const VK_COMMUNITY_URL = 'https://vk.ru/engineer_basevich';
-const VK_DIALOG_URL = 'https://vk.me/engineer_basevich?ref=site_order&ref_source=catalog';
 const INTERVIEW_URL = 'https://warhorseminiatures.com/2019/02/10/interview-with-igor-basevich-of-engineer-basevich/';
 
 const money = (value: number) => `${new Intl.NumberFormat('ru-RU').format(value)} ₽`;
@@ -184,7 +183,7 @@ export default function Home() {
       setOrderCopied(false);
     }
 
-    window.open(VK_DIALOG_URL, '_blank', 'noopener,noreferrer');
+    window.open(VK_ORDER_DIALOG_URL, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -200,7 +199,7 @@ export default function Home() {
         <nav aria-label="Основная навигация">
           <a href="#catalog">Каталог</a>
           <a href="#delivery">Доставка</a>
-          <a href={VK_COMMUNITY_URL} target="_blank" rel="noreferrer">Сообщество</a>
+          <a href={VK_PUBLIC_COMMUNITY_URL} target="_blank" rel="noreferrer">Сообщество</a>
         </nav>
         <button className="cart-button" type="button" onClick={() => setCartOpen(true)} aria-label={`Открыть заказ, товаров: ${cartCount}`}>
           <ShoppingBag aria-hidden="true" size={20} strokeWidth={1.7} />
@@ -220,7 +219,7 @@ export default function Home() {
           </p>
           <div className="hero-actions">
             <a className="primary-button" href="#catalog">Смотреть наборы</a>
-            <a className="hero-community" href={VK_COMMUNITY_URL} target="_blank" rel="noreferrer">
+            <a className="hero-community" href={VK_PUBLIC_COMMUNITY_URL} target="_blank" rel="noreferrer">
               Сообщество ВКонтакте
               <ArrowUpRight aria-hidden="true" size={18} strokeWidth={1.6} />
             </a>
@@ -303,12 +302,12 @@ export default function Home() {
         <ol className="steps">
           <li><span>01</span><h3>Выберите наборы</h3><p>Добавьте один или несколько наборов в заказ.</p></li>
           <li><span>02</span><h3>Заполните адрес</h3><p>Укажите получателя и данные для Почты России.</p></li>
-          <li><span>03</span><h3>Перейдите в ВК</h3><p>В диалоге появится готовый текст заказа для проверки.</p></li>
+          <li><span>03</span><h3>Перейдите в ВК</h3><p>Продолжите оформление в отдельном сообществе заказов.</p></li>
         </ol>
       </section>
 
       <section className="cta-section">
-        <a className="community-link" href={VK_COMMUNITY_URL} target="_blank" rel="noreferrer">
+        <a className="community-link" href={VK_PUBLIC_COMMUNITY_URL} target="_blank" rel="noreferrer">
           <span className="community-link__mark" aria-hidden="true">VK</span>
           <span className="community-link__copy">
             <small>Сообщество ВКонтакте</small>
@@ -334,7 +333,7 @@ export default function Home() {
           <p>Заказы подтверждаем в ВКонтакте.<br />Отправляем Почтой России.</p>
         </div>
         <div className="footer-meta">
-          <a href={VK_COMMUNITY_URL} target="_blank" rel="noreferrer">
+          <a href={VK_PUBLIC_COMMUNITY_URL} target="_blank" rel="noreferrer">
             Сообщество ВКонтакте
             <ArrowUpRight aria-hidden="true" size={16} strokeWidth={1.6} />
           </a>
@@ -394,9 +393,9 @@ export default function Home() {
 
                 <button className="vk-button" type="submit">
                   <span className="vk-logo">VK</span>
-                  Перейти в сообщения сообщества
+                  Перейти в сообщество заказов
                 </button>
-                <p className="form-note">{orderCopied ? 'Текст заказа скопирован — вставьте его в диалог сообщества «Солдатики Инженера Басевича».' : 'Сообщение не отправится само: вы сможете проверить его перед отправкой.'}</p>
+                <p className="form-note">{orderCopied ? 'Текст заказа скопирован — вставьте его в диалог отдельного сообщества заказов.' : 'Пока работает резервный сценарий: сообщение можно проверить перед отправкой. После подключения Mini App заказ будет передаваться автоматически.'}</p>
               </form>
             )}
           </aside>

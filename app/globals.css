@@ -237,6 +237,29 @@ legend { font-family: var(--font-display); font-size: 26px; font-weight: 700; ma
 .vk-logo { background: white; border-radius: 7px; color: #087dff; font-size: 10px; margin-right: 12px; padding: 5px 4px; }
 .form-note { color: #7b817b; font-size: 10px; line-height: 1.45; margin: 10px 20px 0; text-align: center; }
 
+.vk-order-page { align-items: center; background: var(--paper); display: flex; flex-direction: column; min-height: 100dvh; padding: max(24px, env(safe-area-inset-top)) 20px max(28px, env(safe-area-inset-bottom)); }
+.vk-order-brand { align-items: center; display: flex; gap: 11px; margin-bottom: 30px; }
+.vk-order-brand img { height: 67px; mix-blend-mode: multiply; object-fit: contain; width: 51px; }
+.vk-order-brand span { align-items: center; display: flex; flex-direction: column; }
+.vk-order-brand small { color: #666d66; font-size: 7px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; }
+.vk-order-brand strong { font-family: var(--font-display); font-size: 23px; line-height: 1; }
+.vk-order-card { background: var(--cream); border: 1px solid var(--line); box-shadow: 0 24px 70px rgba(23,32,25,.08); max-width: 560px; padding: clamp(32px, 7vw, 58px); text-align: center; width: 100%; }
+.vk-order-card h1 { font-size: clamp(42px, 8vw, 62px); line-height: .95; margin-bottom: 22px; }
+.vk-order-card .eyebrow { margin: 0 0 13px; }
+.vk-order-icon { align-items: center; background: var(--ink); border-radius: 50%; color: #fff; display: inline-flex; height: 58px; justify-content: center; margin-bottom: 25px; width: 58px; }
+.vk-order-icon--success { background: #32764a; }
+.vk-order-icon svg { height: 25px; width: 25px; }
+.vk-order-lead { color: #5d655e; font-size: 16px; line-height: 1.6; margin: 0 auto 25px; max-width: 430px; }
+.vk-order-security { align-items: center; background: #ece7db; color: #5d655e; display: flex; font-size: 12px; gap: 11px; line-height: 1.45; margin: 0 0 24px; padding: 14px 16px; text-align: left; }
+.vk-order-security svg { color: var(--red); flex: 0 0 auto; height: 21px; width: 21px; }
+.vk-order-warning { background: rgba(157,45,43,.08); border-left: 3px solid var(--red); color: #7b2827; font-size: 12px; line-height: 1.45; margin: 0 0 18px; padding: 12px 14px; text-align: left; }
+.vk-order-hint { color: #777d77; font-size: 11px; line-height: 1.45; margin: -6px 0 18px; }
+.vk-order-primary { background: #087dff; border: 0; color: #fff; cursor: pointer; font-size: 12px; font-weight: 800; padding: 17px 22px; width: 100%; }
+.vk-order-primary:hover:not(:disabled) { background: #0068db; }
+.vk-order-primary:disabled { cursor: not-allowed; opacity: .52; }
+.vk-order-secondary { border-bottom: 1px solid var(--ink); display: inline-block; font-size: 12px; font-weight: 700; margin-top: 20px; padding-bottom: 4px; }
+.vk-order-secondary:hover { border-color: var(--red); color: var(--red); }
+
 @media (max-width: 850px) {
   nav { display: none; }
   .hero { gap: 44px; grid-template-columns: 1fr; min-height: 0; overflow: visible; }
