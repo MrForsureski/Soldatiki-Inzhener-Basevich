@@ -235,8 +235,7 @@ export default function Home() {
 
       <section className="catalog-section" id="catalog">
         <div className="section-heading">
-          <p className="eyebrow">Каталог исторических серий</p>
-          <h2>Полки, армии, эпохи</h2>
+          <h2>Поиск по каталогу</h2>
         </div>
 
         <div className="catalog-search" role="search">
