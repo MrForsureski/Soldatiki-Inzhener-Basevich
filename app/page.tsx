@@ -1,7 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
-import { Search, ShoppingBag, X } from 'lucide-react';
+import { ArrowUpRight, Search, ShoppingBag, X } from 'lucide-react';
 
 type Product = {
   id: string;
@@ -86,7 +86,7 @@ const PRODUCTS: Product[] = [
 
 const FILTERS = ['Все', '1812 год', 'Античность', 'Средневековье', 'XX век'];
 
-const VK_PROFILE_URL = 'https://vk.ru/bibader';
+const VK_COMMUNITY_URL = 'https://vk.ru/engineer_basevich';
 const VK_DIALOG_URL = 'https://vk.me/bibader';
 
 const money = (value: number) => `${new Intl.NumberFormat('ru-RU').format(value)} ₽`;
@@ -202,7 +202,7 @@ export default function Home() {
         <nav aria-label="Основная навигация">
           <a href="#catalog">Каталог</a>
           <a href="#delivery">Доставка</a>
-          <a href={VK_PROFILE_URL} target="_blank" rel="noreferrer">ВКонтакте</a>
+          <a href={VK_COMMUNITY_URL} target="_blank" rel="noreferrer">Сообщество</a>
         </nav>
         <button className="cart-button" type="button" onClick={() => setCartOpen(true)} aria-label={`Открыть заказ, товаров: ${cartCount}`}>
           <ShoppingBag aria-hidden="true" size={20} strokeWidth={1.7} />
@@ -212,7 +212,6 @@ export default function Home() {
       </header>
 
       <section className="hero" id="top">
-        <p className="hero-index" aria-hidden="true">Санкт-Петербург · масштаб 1:32 · классический пластик</p>
         <div className="hero-copy">
           <p className="eyebrow">Петербургская пластическая миниатюра</p>
           <h1>Инженеръ<br /><em>Басевичъ</em></h1>
@@ -308,9 +307,16 @@ export default function Home() {
       </section>
 
       <section className="cta-section">
-        <p className="eyebrow">Начните коллекцию</p>
-        <h2>Найдите свой<br /><em>первый строй</em></h2>
-        <a className="primary-button primary-button--light" href="#catalog">Перейти в каталог</a>
+        <p className="eyebrow">Каталог</p>
+        <h2>Полки, армии,<br /><em>эпохи</em></h2>
+        <a className="community-link" href={VK_COMMUNITY_URL} target="_blank" rel="noreferrer">
+          <span className="community-link__mark" aria-hidden="true">VK</span>
+          <span className="community-link__copy">
+            <small>Официальное сообщество</small>
+            <strong>Инженеръ Басевичъ</strong>
+          </span>
+          <ArrowUpRight aria-hidden="true" size={28} strokeWidth={1.5} />
+        </a>
       </section>
 
       <footer>
@@ -319,7 +325,7 @@ export default function Home() {
           <span><small>Солдатики</small><strong>Инженеръ Басевичъ</strong></span>
         </a>
         <p>Заказы подтверждаем в ВКонтакте.<br />Доставка Почтой России.</p>
-        <a href={VK_PROFILE_URL} target="_blank" rel="noreferrer">vk.ru/bibader</a>
+        <a href={VK_COMMUNITY_URL} target="_blank" rel="noreferrer">Сообщество во ВКонтакте</a>
         <p>© 2026 «Инженер Басевич»</p>
       </footer>
 
