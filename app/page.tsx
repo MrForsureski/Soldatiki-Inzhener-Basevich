@@ -323,10 +323,15 @@ export default function Home() {
       </section>
 
       <footer className="site-footer">
-        <a className="brand brand--footer" href="#top">
-          <img src="/logo-basevich.png" alt="" />
-          <span><small>Солдатики</small><strong>Инженеръ Басевичъ</strong></span>
-        </a>
+        <div className="footer-brand">
+          <a className="footer-brand__logo" href="#top" aria-label="Наверх">
+            <img src="/logo-basevich.png" alt="" />
+          </a>
+          <a className="footer-brand__title" href="#top">
+            <small>Солдатики</small>
+            <strong>Инженеръ Басевичъ</strong>
+          </a>
+        </div>
         <div className="footer-order">
           <small>Заказ и доставка</small>
           <p>Заказы подтверждаем в ВКонтакте.<br />Отправляем Почтой России.</p>
