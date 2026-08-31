@@ -3,7 +3,7 @@ import './globals.css';
 
 const title = 'Шеренга — коллекционные игрушечные солдатики';
 const description = 'Каталог коллекционных солдатиков и исторических миниатюр. Выберите наборы, укажите адрес доставки и оформите заказ через ВКонтакте.';
-const siteOrigin = 'https://sherenga-soldiers.openai.site';
+const siteOrigin = 'https://sherenga-soldiers.kukarekun505.chatgpt.site';
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin),
