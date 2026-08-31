@@ -88,6 +88,7 @@ const FILTERS = ['Все', '1812 год', 'Античность', 'Средне�
 
 const VK_COMMUNITY_URL = 'https://vk.ru/engineer_basevich';
 const VK_DIALOG_URL = 'https://vk.me/bibader';
+const INTERVIEW_URL = 'https://warhorseminiatures.com/2019/02/10/interview-with-igor-basevich-of-engineer-basevich/';
 
 const money = (value: number) => `${new Intl.NumberFormat('ru-RU').format(value)} ₽`;
 
@@ -213,24 +214,28 @@ export default function Home() {
 
       <section className="hero" id="top">
         <div className="hero-copy">
-          <p className="eyebrow">Петербургская пластическая миниатюра</p>
-          <h1>Инженеръ<br /><em>Басевичъ</em></h1>
-          <p className="hero-lead">История России в масштабе 1:32.</p>
+          <p className="eyebrow">Авторские исторические солдатики</p>
+          <h1>История<br /><em>в миниатюре</em></h1>
           <p className="hero-text">
-            Авторские наборы Игоря Басевича — инженера-технолога и коллекционера
-            из Санкт-Петербурга. Классический пластик, ограниченные выпуски
-            и сюжеты от древности до истории России XX века.
+            Игорь Басевич — петербургский коллекционер и инженер-технолог.
+            Вместе с командой мастеров он выпускает ограниченные серии пластиковых
+            фигур в масштабе 1:32 — от Древнего мира до истории России XX века.
           </p>
           <div className="hero-actions">
-            <a className="primary-button" href="#catalog">Открыть каталог</a>
-            <span>Классический пластик<br />ограниченные выпуски</span>
+            <a className="primary-button" href="#catalog">Смотреть наборы</a>
+            <a className="hero-community" href={VK_COMMUNITY_URL} target="_blank" rel="noreferrer">
+              Сообщество ВКонтакте
+              <ArrowUpRight aria-hidden="true" size={18} strokeWidth={1.6} />
+            </a>
           </div>
         </div>
-        <div className="hero-folio" aria-hidden="true">
-          <span>ИБ</span>
-          <small>Масштабная<br />миниатюра</small>
-          <b>1:32</b>
-        </div>
+        <figure className="hero-media">
+          <img src="/basevich-miniatures.jpg" alt="Фигуры из авторской серии исторических солдатиков" />
+          <figcaption>
+            <span>Фигуры из авторской серии</span>
+            <a href={INTERVIEW_URL} target="_blank" rel="noreferrer">Фото: Warhorse Miniatures ↗</a>
+          </figcaption>
+        </figure>
       </section>
 
       <section className="catalog-section" id="catalog">
@@ -317,14 +322,22 @@ export default function Home() {
         </a>
       </section>
 
-      <footer>
+      <footer className="site-footer">
         <a className="brand brand--footer" href="#top">
           <img src="/logo-basevich.png" alt="" />
           <span><small>Солдатики</small><strong>Инженеръ Басевичъ</strong></span>
         </a>
-        <p>Заказы подтверждаем в ВКонтакте.<br />Доставка Почтой России.</p>
-        <a href={VK_COMMUNITY_URL} target="_blank" rel="noreferrer">Сообщество во ВКонтакте</a>
-        <p>© 2026 «Инженер Басевич»</p>
+        <div className="footer-order">
+          <small>Заказ и доставка</small>
+          <p>Заказы подтверждаем в ВКонтакте.<br />Отправляем Почтой России.</p>
+        </div>
+        <div className="footer-meta">
+          <a href={VK_COMMUNITY_URL} target="_blank" rel="noreferrer">
+            Сообщество ВКонтакте
+            <ArrowUpRight aria-hidden="true" size={16} strokeWidth={1.6} />
+          </a>
+          <p>© 2026 «Инженер Басевич»</p>
+        </div>
       </footer>
 
       {cartOpen && (
