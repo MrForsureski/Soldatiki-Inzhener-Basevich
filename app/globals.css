@@ -237,8 +237,9 @@ legend { font-family: var(--font-display); font-size: 26px; font-weight: 700; ma
 
 @media (max-width: 850px) {
   nav { display: none; }
-  .hero { gap: 44px; grid-template-columns: 1fr; min-height: 0; }
-  .hero-media { max-width: 680px; }
+  .hero { gap: 44px; grid-template-columns: 1fr; min-height: 0; overflow: visible; }
+  .hero-copy, .hero-media { min-width: 0; }
+  .hero-media { max-width: 680px; width: 100%; }
   .product-grid { grid-template-columns: 1fr 1fr; }
   .delivery-section { grid-template-columns: 1fr; }
   .site-footer { gap: 30px; grid-template-columns: 1fr 1fr; }
@@ -250,19 +251,24 @@ legend { font-family: var(--font-display); font-size: 26px; font-weight: 700; ma
 }
 
 @media (max-width: 560px) {
-  .site-header { min-height: 88px; padding: 6px 14px; }
-  .brand { gap: 8px; }
-  .brand img { height: 60px; width: 46px; }
-  .brand small { font-size: 7px; letter-spacing: .16em; }
-  .brand strong { font-size: 19px; }
-  .cart-button { gap: 6px; }
-  .cart-button small { display: none; }
-  .hero { min-height: auto; padding: 55px 20px 58px; }
-  h1 { font-size: clamp(52px, 16vw, 72px); }
+  .site-header { grid-template-areas: '. brand cart'; grid-template-columns: 44px minmax(0, 1fr) 44px; min-height: 80px; overflow: hidden; padding: 6px 14px; }
+  .site-header .brand { gap: 7px; min-width: 0; width: auto; }
+  .site-header .brand img { flex: 0 0 auto; height: 52px; width: 40px; }
+  .site-header .brand span { min-width: 0; }
+  .site-header .brand small { font-size: 6px; letter-spacing: .14em; }
+  .site-header .brand strong { font-size: 18px; white-space: nowrap; }
+  .cart-button { gap: 4px; padding: 9px; }
+  .cart-button span, .cart-button small { display: none; }
+  .hero { gap: 36px; min-height: auto; padding: 46px 20px 54px; }
+  h1 { font-size: clamp(44px, 13.5vw, 62px); letter-spacing: -.045em; line-height: .94; }
+  h1 em { display: inline-block; }
   .hero-text { font-size: 17px; }
   .hero-actions { align-items: flex-start; flex-direction: column; }
-  .hero-media::before { inset: -8px 8px 8px -8px; }
-  .hero-media figcaption { align-items: flex-start; flex-direction: column; gap: 5px; }
+  .hero-media { border: 1px solid rgba(157,45,43,.45); max-width: 100%; padding: 8px; }
+  .hero-media::before { display: none; }
+  .hero-media img { height: auto; max-width: 100%; }
+  .hero-media figcaption { align-items: flex-start; flex-direction: column; gap: 5px; line-height: 1.45; padding: 10px 2px 2px; }
+  .hero-media figcaption a { overflow-wrap: anywhere; }
   .catalog-section { padding: 58px 20px 70px; }
   .catalog-search { height: 58px; padding: 0 14px; }
   .catalog-search input { font-size: 15px; }
@@ -277,6 +283,7 @@ legend { font-family: var(--font-display); font-size: 26px; font-weight: 700; ma
   .community-link__copy strong { font-size: 25px; }
   .community-link svg { height: 23px; width: 23px; }
   .site-footer { grid-template-columns: 1fr; padding: 35px 20px; }
+  .site-footer .brand { max-width: 100%; width: auto; }
   .footer-order { border-left: 0; border-top: 1px solid var(--line); padding-left: 0; padding-top: 22px; }
   .footer-meta { align-items: flex-start; flex-direction: column; gap: 14px; grid-column: auto; }
   .cart-drawer { padding: 25px 20px 35px; }
@@ -289,6 +296,6 @@ legend { font-family: var(--font-display); font-size: 26px; font-weight: 700; ma
 
 @media (max-width: 390px) {
   .site-header { padding-inline: 10px; }
-  .brand strong { font-size: 17px; }
-  .cart-button span { display: none; }
+  .site-header .brand img { height: 48px; width: 37px; }
+  .site-header .brand strong { font-size: 16px; }
 }
