@@ -87,7 +87,7 @@ const PRODUCTS: Product[] = [
 const FILTERS = ['Все', '1812 год', 'Античность', 'Средневековье', 'XX век'];
 
 const VK_COMMUNITY_URL = 'https://vk.ru/engineer_basevich';
-const VK_DIALOG_URL = 'https://vk.me/bibader';
+const VK_DIALOG_URL = 'https://vk.me/engineer_basevich?ref=site_order&ref_source=catalog';
 const INTERVIEW_URL = 'https://warhorseminiatures.com/2019/02/10/interview-with-igor-basevich-of-engineer-basevich/';
 
 const money = (value: number) => `${new Intl.NumberFormat('ru-RU').format(value)} ₽`;
@@ -184,10 +184,7 @@ export default function Home() {
       setOrderCopied(false);
     }
 
-    const vkUrl = VK_DIALOG_URL
-      ? `${VK_DIALOG_URL}${VK_DIALOG_URL.includes('?') ? '&' : '?'}text=${encodeURIComponent(message)}`
-      : 'https://vk.com/im';
-    window.open(vkUrl, '_blank', 'noopener,noreferrer');
+    window.open(VK_DIALOG_URL, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -397,9 +394,9 @@ export default function Home() {
 
                 <button className="vk-button" type="submit">
                   <span className="vk-logo">VK</span>
-                  Перейти к заказу в ВК
+                  Перейти в сообщения сообщества
                 </button>
-                <p className="form-note">{orderCopied ? 'Текст заказа скопирован — вставьте его в открывшийся диалог ВК.' : 'Сообщение не отправится само: вы сможете проверить его перед отправкой.'}</p>
+                <p className="form-note">{orderCopied ? 'Текст заказа скопирован — вставьте его в диалог сообщества «Солдатики Инженера Басевича».' : 'Сообщение не отправится само: вы сможете проверить его перед отправкой.'}</p>
               </form>
             )}
           </aside>
