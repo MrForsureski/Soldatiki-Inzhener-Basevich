@@ -505,6 +505,7 @@ export default function Home() {
             Сообщество ВКонтакте
             <ArrowUpRight aria-hidden="true" size={16} strokeWidth={1.6} />
           </a>
+          <a href="/privacy">Политика обработки данных</a>
           <p>© 2026 «Инженер Басевич»</p>
         </div>
       </footer>
@@ -557,7 +558,17 @@ export default function Home() {
                   <label className="field field--full">Комментарий<textarea name="comment" rows={3} maxLength={500} placeholder="Например: не звонить до 12:00" /></label>
                 </fieldset>
 
-                <label className="consent" data-consent-version={ORDER_CONSENT_VERSION}><input type="checkbox" required /><span>Согласен на обработку указанных данных для оформления заказа, связи со мной во ВКонтакте и отправки посылки.</span></label>
+                <div className="consent" data-consent-version={ORDER_CONSENT_VERSION}>
+                  <input id="order-consent" name="consent" type="checkbox" required />
+                  <div>
+                    <label htmlFor="order-consent">
+                      Даю согласие Басевичу Игорю Аркадьевичу на обработку указанных ФИО,
+                      телефона, индекса, адреса, состава заказа, комментария и идентификатора
+                      ВКонтакте для оформления, связи со мной и отправки посылки.
+                    </label>
+                    <a href="/privacy" target="_blank" rel="noreferrer">Политика обработки персональных данных</a>
+                  </div>
+                </div>
 
                 <button className="vk-button" type="submit" disabled={orderSubmitting}>
                   <span className="vk-logo">VK</span>

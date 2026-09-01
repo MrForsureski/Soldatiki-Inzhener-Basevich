@@ -23,7 +23,7 @@ const envSchema = z.object({
   CHECKOUT_TOKEN_TTL_MINUTES: z.coerce.number().int().min(5).max(60).default(20),
   DRAFT_RETENTION_HOURS: z.coerce.number().int().min(1).max(168).default(24),
   PII_RETENTION_DAYS: z.coerce.number().int().min(1).max(365).default(90),
-  CONSENT_VERSION: z.string().min(1).max(64).default('orders-v1'),
+  CONSENT_VERSION: z.string().min(1).max(64).default('orders-v2-2026-09-01'),
 });
 
 export type AppConfig = ReturnType<typeof loadConfig>;

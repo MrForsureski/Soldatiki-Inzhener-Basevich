@@ -23,7 +23,7 @@ const orderBody = {
     comment: 'Тестовый заказ',
   },
   consentAccepted: true,
-  consentVersion: 'orders-v1',
+  consentVersion: 'orders-v2-2026-09-01',
 };
 
 async function waitFor(check: () => Promise<boolean>, timeoutMs = 2_000) {
@@ -76,7 +76,7 @@ integration('Order API with PostgreSQL and VK Callback', () => {
       CHECKOUT_TOKEN_TTL_MINUTES: '20',
       DRAFT_RETENTION_HOURS: '24',
       PII_RETENTION_DAYS: '90',
-      CONSENT_VERSION: 'orders-v1',
+      CONSENT_VERSION: 'orders-v2-2026-09-01',
     });
 
     await migrate();

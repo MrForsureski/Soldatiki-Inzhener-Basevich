@@ -3,7 +3,7 @@ import './globals.css';
 
 const title = 'Солдатики Инженер Басевич — официальный каталог';
 const description = 'Петербургская пластическая миниатюра «Инженер Басевич»: исторические наборы масштаба 1:32 и оформление заказа через ВКонтакте.';
-const siteOrigin = 'https://sherenga-soldiers.kukarekun505.chatgpt.site';
+const siteOrigin = 'https://soldatiki-inzhener-basevich.onrender.com';
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin),

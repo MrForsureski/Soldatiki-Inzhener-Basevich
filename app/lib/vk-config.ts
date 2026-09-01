@@ -27,4 +27,4 @@ export const ORDER_API_URL =
   (process.env.NEXT_PUBLIC_ORDER_API_URL || '').trim().replace(/\/$/, '');
 
 export const ORDER_CONSENT_VERSION =
-  process.env.NEXT_PUBLIC_ORDER_CONSENT_VERSION || 'orders-v1';
+  process.env.NEXT_PUBLIC_ORDER_CONSENT_VERSION || 'orders-v2-2026-09-01';
