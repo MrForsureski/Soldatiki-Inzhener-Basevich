@@ -1,0 +1,12 @@
+.git
+.gitignore
+.next
+.vinext
+.wrangler
+node_modules
+**/node_modules
+**/dist
+**/.env*
+coverage
+outputs
+work

@@ -1,12 +1,22 @@
 'use client';
 
 import bridge from '@vkontakte/vk-bridge';
-import { Check, Link2, MessageCircle, ShieldCheck } from 'lucide-react';
+import { Check, MessageCircle, ShieldCheck } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { VK_ORDER_COMMUNITY_ID, VK_ORDER_DIALOG_URL } from '../lib/vk-config';
+import {
+  ORDER_API_URL,
+  VK_ORDER_COMMUNITY_ID,
+  VK_ORDER_DIALOG_URL,
+} from '../lib/vk-config';
 
-type SubmitState = 'initializing' | 'ready' | 'submitting' | 'success' | 'error';
-type SetupState = 'idle' | 'connecting' | 'success' | 'wrong-group' | 'error';
+type SubmitState = 'initializing' | 'checking' | 'ready' | 'submitting' | 'success' | 'error' | 'invalid';
+
+type OrderPreview = {
+  orderNumber: string;
+  status: string;
+  totalKopecks: number;
+  itemCount: number;
+};
 
 function readOrderToken() {
   const url = new URL(window.location.href);
@@ -14,52 +24,108 @@ function readOrderToken() {
   return hash.get('order') || '';
 }
 
+const money = (kopecks: number) => (
+  `${new Intl.NumberFormat('ru-RU').format(kopecks / 100)} ₽`
+);
+
 export default function VkOrderPage() {
   const [state, setState] = useState<SubmitState>('initializing');
-  const [setupState, setSetupState] = useState<SetupState>('idle');
   const [orderToken, setOrderToken] = useState('');
+  const [preview, setPreview] = useState<OrderPreview | null>(null);
   const [embedded, setEmbedded] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const tokenIsValid = useMemo(
-    () => /^[A-Za-z0-9_-]{20,128}$/.test(orderToken),
+    () => /^[A-Za-z0-9_-]{43}$/.test(orderToken),
     [orderToken],
   );
 
   useEffect(() => {
-    const isEmbedded = bridge.isEmbedded();
-    const finishInitialization = () => {
-      setOrderToken(readOrderToken());
+    let active = true;
+    const controller = new AbortController();
+
+    const initialize = async () => {
+      const isEmbedded = bridge.isEmbedded();
       setEmbedded(isEmbedded);
-      setState('ready');
+
+      if (isEmbedded) {
+        const timeout = new Promise<void>((resolve) => {
+          window.setTimeout(resolve, 3500);
+        });
+        await Promise.race([
+          bridge.send('VKWebAppInit').then(() => undefined).catch(() => undefined),
+          timeout,
+        ]);
+      }
+
+      if (!active) return;
+      const token = readOrderToken();
+      setOrderToken(token);
+
+      if (!token) {
+        setState('ready');
+        return;
+      }
+      if (!/^[A-Za-z0-9_-]{43}$/.test(token)) {
+        setState('invalid');
+        return;
+      }
+      if (!ORDER_API_URL) {
+        setErrorMessage('Сервер заказов ещё не подключён. Вернитесь в каталог и используйте резервный диалог.');
+        setState('error');
+        return;
+      }
+
+      setState('checking');
+      const timeoutId = window.setTimeout(() => controller.abort(), 12_000);
+      try {
+        const response = await fetch(`${ORDER_API_URL}/v1/orders/status`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          signal: controller.signal,
+          body: JSON.stringify({ checkoutToken: token }),
+        });
+        if (response.status === 404) {
+          setState('invalid');
+          return;
+        }
+        if (!response.ok) throw new Error('ORDER_CHECK_FAILED');
+        const result = await response.json() as OrderPreview;
+        if (!active) return;
+        setPreview(result);
+        setState('ready');
+      } catch {
+        if (!active) return;
+        setErrorMessage('Не удалось проверить заказ. Обновите экран через минуту.');
+        setState('error');
+      } finally {
+        window.clearTimeout(timeoutId);
+      }
     };
 
-    if (!isEmbedded) {
-      void Promise.resolve().then(finishInitialization);
-      return;
-    }
-
-    const timeout = new Promise<void>((resolve) => {
-      window.setTimeout(resolve, 3500);
-    });
-
-    void Promise.race([
-      bridge.send('VKWebAppInit').then(() => undefined).catch(() => undefined),
-      timeout,
-    ]).then(() => {
-        setOrderToken(readOrderToken());
-        setEmbedded(true);
-        setState('ready');
-      });
+    void initialize();
+    return () => {
+      active = false;
+      controller.abort();
+    };
   }, []);
 
   const confirmOrder = async () => {
-    if (!tokenIsValid || state === 'submitting') return;
+    if (!embedded || !tokenIsValid || !preview || state === 'submitting') return;
 
     setState('submitting');
+    setErrorMessage('');
     try {
       await bridge.send('VKWebAppAllowMessagesFromGroup', {
         group_id: VK_ORDER_COMMUNITY_ID,
       });
+    } catch {
+      setErrorMessage('Вы не разрешили сообществу написать вам. Без этого бот не сможет прислать заказ.');
+      setState('error');
+      return;
+    }
+
+    try {
       await bridge.send('VKWebAppSendPayload', {
         group_id: VK_ORDER_COMMUNITY_ID,
         payload: {
@@ -69,23 +135,12 @@ export default function VkOrderPage() {
       });
       setState('success');
     } catch {
+      setErrorMessage('VK не передал заказ сообществу. Попробуйте ещё раз или откройте диалог вручную.');
       setState('error');
     }
   };
 
-  const connectCommunity = async () => {
-    if (!embedded || setupState === 'connecting') return;
-
-    setSetupState('connecting');
-    try {
-      const result = await bridge.send('VKWebAppAddToCommunity');
-      setSetupState(
-        result.group_id === VK_ORDER_COMMUNITY_ID ? 'success' : 'wrong-group',
-      );
-    } catch {
-      setSetupState('error');
-    }
-  };
+  const isLoading = state === 'initializing' || state === 'checking';
 
   return (
     <main className="vk-order-page">
@@ -98,43 +153,36 @@ export default function VkOrderPage() {
       </header>
 
       <section className="vk-order-card" aria-live="polite">
-        {state !== 'initializing' && !tokenIsValid ? (
+        {isLoading ? (
           <>
-            <span className={`vk-order-icon${setupState === 'success' ? ' vk-order-icon--success' : ''}`}>
-              {setupState === 'success' ? <Check aria-hidden="true" /> : <Link2 aria-hidden="true" />}
-            </span>
-            <p className="eyebrow">Настройка приложения</p>
-            <h1>{setupState === 'success' ? 'Сообщество подключено' : 'Подключите сообщество'}</h1>
+            <span className="vk-order-icon"><MessageCircle aria-hidden="true" /></span>
+            <p className="eyebrow">Проверяем заказ</p>
+            <h1>Одну минуту</h1>
+            <p className="vk-order-lead">Загружаем одноразовый номер заказа.</p>
+          </>
+        ) : !orderToken ? (
+          <>
+            <span className="vk-order-icon vk-order-icon--success"><Check aria-hidden="true" /></span>
+            <p className="eyebrow">Настройка завершена</p>
+            <h1>Приложение подключено</h1>
             <p className="vk-order-lead">
-              {setupState === 'success'
-                ? 'Mini App установлен в сообщество заказов. Теперь можно переходить к настройке сервера и бота.'
-                : 'Это действие выполняется один раз владельцем или администратором нового сообщества.'}
+              Для оформления выберите наборы на сайте. Сюда вы вернётесь автоматически на последнем шаге.
             </p>
-
-            {setupState === 'wrong-group' && (
-              <p className="vk-order-warning">
-                Выбрано другое сообщество. Повторите подключение и выберите «Заказы — Солдатики Инженера Басевича».
-              </p>
-            )}
-            {setupState === 'error' && (
-              <p className="vk-order-warning">
-                VK не разрешил подключение. Убедитесь, что вы администратор сообщества, и попробуйте ещё раз.
-              </p>
-            )}
-            {!embedded && (
-              <p className="vk-order-warning">Откройте этот экран по ссылке приложения внутри ВКонтакте.</p>
-            )}
-
-            {setupState !== 'success' && (
-              <button
-                className="vk-order-primary"
-                type="button"
-                disabled={!embedded || setupState === 'connecting'}
-                onClick={connectCommunity}
-              >
-                {setupState === 'connecting' ? 'Открываем список…' : 'Выбрать и подключить сообщество'}
-              </button>
-            )}
+            <a className="vk-order-primary" href="/#catalog" target="_blank" rel="noreferrer">
+              Открыть каталог
+            </a>
+          </>
+        ) : state === 'invalid' ? (
+          <>
+            <span className="vk-order-icon"><MessageCircle aria-hidden="true" /></span>
+            <p className="eyebrow">Ссылка недействительна</p>
+            <h1>Заказ не найден</h1>
+            <p className="vk-order-lead">
+              Одноразовый номер истёк или уже не подходит. Вернитесь в каталог и начните оформление ещё раз.
+            </p>
+            <a className="vk-order-primary" href="/#catalog" target="_blank" rel="noreferrer">
+              Вернуться в каталог
+            </a>
           </>
         ) : state === 'success' ? (
           <>
@@ -142,8 +190,8 @@ export default function VkOrderPage() {
             <p className="eyebrow">Запрос передан в VK</p>
             <h1>Почти готово</h1>
             <p className="vk-order-lead">
-              Дождитесь сообщения от сообщества. Только после него заказ считается
-              принятым, и администратор сможет согласовать детали лично.
+              {preview ? `Заказ № ${preview.orderNumber}. ` : ''}
+              Дождитесь сообщения от сообщества. После него администратор сможет согласовать детали лично.
             </p>
             <a className="vk-order-secondary" href={VK_ORDER_DIALOG_URL} target="_blank" rel="noreferrer">
               Открыть сообщения сообщества
@@ -155,29 +203,28 @@ export default function VkOrderPage() {
             <p className="eyebrow">Последний шаг</p>
             <h1>Подтвердите заказ</h1>
             <p className="vk-order-lead">
-              Разрешите сообществу написать вам. После подтверждения администратор
-              лично согласует наличие, доставку и способ оплаты.
+              Разрешите сообществу написать вам. Администратор лично согласует наличие, доставку и способ оплаты.
             </p>
 
-            <div className="vk-order-security">
-              <ShieldCheck aria-hidden="true" />
-              <span>В VK передаётся одноразовый номер заказа, а не адрес в ссылке.</span>
-            </div>
+            {preview && (
+              <div className="vk-order-security">
+                <ShieldCheck aria-hidden="true" />
+                <span>
+                  Заказ № {preview.orderNumber}: {preview.itemCount} шт., {money(preview.totalKopecks)} без доставки.
+                  В VK передаётся только одноразовый номер.
+                </span>
+              </div>
+            )}
 
-            {!embedded && state !== 'initializing' && (
+            {!embedded && (
               <p className="vk-order-hint">Этот экран нужно открыть внутри приложения ВКонтакте.</p>
             )}
-
-            {state === 'error' && (
-              <p className="vk-order-warning">
-                Не удалось получить разрешение. Попробуйте ещё раз или откройте диалог сообщества.
-              </p>
-            )}
+            {errorMessage && <p className="vk-order-warning">{errorMessage}</p>}
 
             <button
               className="vk-order-primary"
               type="button"
-              disabled={!tokenIsValid || state === 'initializing' || state === 'submitting'}
+              disabled={!embedded || !preview || state === 'submitting'}
               onClick={confirmOrder}
             >
               {state === 'submitting' ? 'Передаём заказ…' : 'Разрешить и подтвердить'}

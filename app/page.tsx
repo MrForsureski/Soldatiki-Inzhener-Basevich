@@ -1,8 +1,14 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowUpRight, Search, ShoppingBag, X } from 'lucide-react';
-import { VK_ORDER_DIALOG_URL, VK_PUBLIC_COMMUNITY_URL } from './lib/vk-config';
+import {
+  ORDER_API_URL,
+  ORDER_CONSENT_VERSION,
+  VK_MINI_APP_URL,
+  VK_ORDER_DIALOG_URL,
+  VK_PUBLIC_COMMUNITY_URL,
+} from './lib/vk-config';
 
 type Product = {
   id: string;
@@ -15,6 +21,21 @@ type Product = {
   description: string;
   tone: string;
 };
+
+type ApiProduct = {
+  id: string;
+  title: string;
+  priceKopecks: number;
+};
+
+function isApiProduct(value: unknown): value is ApiProduct {
+  if (!value || typeof value !== 'object') return false;
+  const product = value as Partial<ApiProduct>;
+  return typeof product.id === 'string'
+    && typeof product.title === 'string'
+    && Number.isSafeInteger(product.priceKopecks)
+    && Number(product.priceKopecks) >= 0;
+}
 
 const PRODUCTS: Product[] = [
   {
@@ -111,13 +132,55 @@ export default function Home() {
   const [cart, setCart] = useState<Record<string, number>>({});
   const [cartOpen, setCartOpen] = useState(false);
   const [orderCopied, setOrderCopied] = useState(false);
+  const [orderSubmitting, setOrderSubmitting] = useState(false);
+  const [orderError, setOrderError] = useState('');
+  const [fallbackMessage, setFallbackMessage] = useState('');
+  const [apiProducts, setApiProducts] = useState<ApiProduct[] | null>(null);
+  const submissionLock = useRef(false);
+  const orderRequestId = useRef<string | null>(null);
 
   useEffect(() => {
     document.body.style.overflow = cartOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [cartOpen]);
 
-  const filteredProducts = PRODUCTS.filter((product) => {
+  useEffect(() => {
+    if (!ORDER_API_URL) return;
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 8_000);
+    void fetch(`${ORDER_API_URL}/v1/products`, { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) throw new Error('CATALOG_API_FAILED');
+        return response.json() as Promise<{ products?: ApiProduct[] }>;
+      })
+      .then((result) => {
+        if (Array.isArray(result.products) && result.products.every(isApiProduct)) {
+          setApiProducts(result.products);
+        }
+      })
+      .catch(() => undefined)
+      .finally(() => window.clearTimeout(timeoutId));
+    return () => {
+      window.clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, []);
+
+  const availableProducts = useMemo(() => {
+    if (!apiProducts) return PRODUCTS;
+    const serverCatalog = new Map(apiProducts.map((product) => [product.id, product]));
+    return PRODUCTS.flatMap((product) => {
+      const serverProduct = serverCatalog.get(product.id);
+      if (!serverProduct || !Number.isSafeInteger(serverProduct.priceKopecks)) return [];
+      return [{
+        ...product,
+        title: serverProduct.title,
+        price: serverProduct.priceKopecks / 100,
+      }];
+    });
+  }, [apiProducts]);
+
+  const filteredProducts = availableProducts.filter((product) => {
     const matchesFilter = filter === 'Все' || product.era === filter;
     const haystack = [product.title, product.era, product.scale, product.badge, product.description]
       .join(' ')
@@ -125,9 +188,9 @@ export default function Home() {
     return matchesFilter && haystack.includes(search.trim().toLocaleLowerCase('ru-RU'));
   });
 
-  const cartItems = useMemo(() => PRODUCTS
+  const cartItems = useMemo(() => availableProducts
     .filter((product) => cart[product.id])
-    .map((product) => ({ ...product, quantity: cart[product.id] })), [cart]);
+    .map((product) => ({ ...product, quantity: cart[product.id] })), [availableProducts, cart]);
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const cartTotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -135,6 +198,9 @@ export default function Home() {
   const addToCart = (id: string) => {
     setCart((current) => ({ ...current, [id]: (current[id] || 0) + 1 }));
     setOrderCopied(false);
+    setOrderError('');
+    setFallbackMessage('');
+    orderRequestId.current = null;
     setCartOpen(true);
   };
 
@@ -149,11 +215,19 @@ export default function Home() {
       return { ...current, [id]: nextQuantity };
     });
     setOrderCopied(false);
+    setOrderError('');
+    setFallbackMessage('');
+    orderRequestId.current = null;
   };
 
   const submitOrder = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!cartItems.length) return;
+    if (!cartItems.length || submissionLock.current) return;
+    submissionLock.current = true;
+    setOrderSubmitting(true);
+    setOrderCopied(false);
+    setOrderError('');
+    setFallbackMessage('');
 
     const form = new FormData(event.currentTarget);
     const lines = cartItems.map((item, index) =>
@@ -176,14 +250,108 @@ export default function Home() {
       'Подтвердите, пожалуйста, наличие и стоимость доставки.',
     ].join('\n');
 
-    try {
-      await navigator.clipboard.writeText(message);
-      setOrderCopied(true);
-    } catch {
-      setOrderCopied(false);
+    const openFallback = async (targetWindow: Window | null) => {
+      let copied = false;
+      try {
+        await navigator.clipboard.writeText(message);
+        copied = true;
+        setOrderCopied(true);
+      } catch {
+        setOrderCopied(false);
+        setFallbackMessage(message);
+      }
+      if (targetWindow && !targetWindow.closed) {
+        targetWindow.location.replace(VK_ORDER_DIALOG_URL);
+      } else {
+        window.open(VK_ORDER_DIALOG_URL, '_blank', 'noopener,noreferrer');
+      }
+      return copied;
+    };
+
+    if (!ORDER_API_URL) {
+      const copied = await openFallback(null);
+      if (!copied) {
+        setOrderError('Браузер не разрешил копирование. Скопируйте текст из поля ниже и откройте диалог сообщества.');
+      }
+      submissionLock.current = false;
+      setOrderSubmitting(false);
+      return;
     }
 
-    window.open(VK_ORDER_DIALOG_URL, '_blank', 'noopener,noreferrer');
+    orderRequestId.current ||= crypto.randomUUID();
+    const targetWindow = window.open('about:blank', '_blank');
+    if (targetWindow) {
+      targetWindow.opener = null;
+      targetWindow.document.title = 'Открываем заказ…';
+      targetWindow.document.body.textContent = 'Сохраняем заказ и открываем ВКонтакте…';
+    }
+    const orderController = new AbortController();
+    const orderTimeoutId = window.setTimeout(() => orderController.abort(), 12_000);
+
+    try {
+      const response = await fetch(`${ORDER_API_URL}/v1/orders`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        signal: orderController.signal,
+        body: JSON.stringify({
+          requestId: orderRequestId.current,
+          items: cartItems.map((item) => ({ productId: item.id, quantity: item.quantity })),
+          customer: {
+            name: String(form.get('name') || ''),
+            phone: String(form.get('phone') || ''),
+            postcode: String(form.get('postcode') || ''),
+            address: String(form.get('address') || ''),
+            comment: String(form.get('comment') || ''),
+          },
+          consentAccepted: true,
+          consentVersion: ORDER_CONSENT_VERSION,
+        }),
+      });
+      if (response.status === 409) {
+        const problem = await response.json().catch(() => null) as { code?: string; message?: string } | null;
+        targetWindow?.close();
+        if (problem?.code !== 'ORDER_ALREADY_SUBMITTED') orderRequestId.current = null;
+        setOrderError(problem?.message || 'Каталог или условия заказа изменились. Обновите страницу.');
+        return;
+      }
+      if (!response.ok) throw new Error('ORDER_API_FAILED');
+      const result = await response.json() as { launchUrl?: string };
+      if (!result.launchUrl) throw new Error('ORDER_URL_MISSING');
+
+      const launchUrl = new URL(result.launchUrl);
+      const expectedAppUrl = new URL(VK_MINI_APP_URL);
+      if (launchUrl.origin !== expectedAppUrl.origin || launchUrl.pathname !== expectedAppUrl.pathname) {
+        throw new Error('ORDER_URL_INVALID');
+      }
+
+      if (targetWindow && !targetWindow.closed) {
+        targetWindow.location.replace(launchUrl.toString());
+      } else {
+        window.location.assign(launchUrl.toString());
+      }
+      setCartOpen(false);
+    } catch {
+      const copied = await openFallback(targetWindow);
+      setOrderError(copied
+        ? 'Автоматическая передача временно недоступна. Откройте резервный диалог и вставьте туда скопированный заказ.'
+        : 'Браузер не разрешил копирование. Скопируйте текст из поля ниже и откройте резервный диалог.');
+    } finally {
+      window.clearTimeout(orderTimeoutId);
+      submissionLock.current = false;
+      setOrderSubmitting(false);
+    }
+  };
+
+  const copyFallbackMessage = async () => {
+    if (!fallbackMessage) return;
+    try {
+      await navigator.clipboard.writeText(fallbackMessage);
+      setOrderCopied(true);
+      setFallbackMessage('');
+      setOrderError('Текст заказа скопирован — вставьте его в открытый диалог сообщества.');
+    } catch {
+      setOrderError('Автоматическое копирование заблокировано. Выделите текст в поле и скопируйте вручную.');
+    }
   };
 
   return (
@@ -382,20 +550,38 @@ export default function Home() {
 
                 <fieldset>
                   <legend>Данные для отправки</legend>
-                  <label className="field field--full">Фамилия, имя, отчество<input name="name" autoComplete="name" required placeholder="Иванов Иван Иванович" /></label>
-                  <label className="field">Телефон<input name="phone" type="tel" autoComplete="tel" required placeholder="+7 900 000-00-00" /></label>
+                  <label className="field field--full">Фамилия, имя, отчество<input name="name" autoComplete="name" required minLength={5} maxLength={160} placeholder="Иванов Иван Иванович" /></label>
+                  <label className="field">Телефон<input name="phone" type="tel" autoComplete="tel" required minLength={10} maxLength={32} placeholder="+7 900 000-00-00" /></label>
                   <label className="field">Почтовый индекс<input name="postcode" inputMode="numeric" autoComplete="postal-code" required pattern="[0-9]{6}" placeholder="123456" /></label>
-                  <label className="field field--full">Полный адрес<input name="address" autoComplete="street-address" required placeholder="Область, город, улица, дом, квартира" /></label>
-                  <label className="field field--full">Комментарий<textarea name="comment" rows={3} placeholder="Например: не звонить до 12:00" /></label>
+                  <label className="field field--full">Полный адрес<input name="address" autoComplete="street-address" required minLength={10} maxLength={500} placeholder="Область, город, улица, дом, квартира" /></label>
+                  <label className="field field--full">Комментарий<textarea name="comment" rows={3} maxLength={500} placeholder="Например: не звонить до 12:00" /></label>
                 </fieldset>
 
-                <label className="consent"><input type="checkbox" required /><span>Согласен передать эти данные продавцу в сообщении ВКонтакте для оформления и отправки заказа.</span></label>
+                <label className="consent" data-consent-version={ORDER_CONSENT_VERSION}><input type="checkbox" required /><span>Согласен на обработку указанных данных для оформления заказа, связи со мной во ВКонтакте и отправки посылки.</span></label>
 
-                <button className="vk-button" type="submit">
+                <button className="vk-button" type="submit" disabled={orderSubmitting}>
                   <span className="vk-logo">VK</span>
-                  Перейти в сообщество заказов
+                  {orderSubmitting ? 'Сохраняем заказ…' : 'Подтвердить через ВКонтакте'}
                 </button>
-                <p className="form-note">{orderCopied ? 'Текст заказа скопирован — вставьте его в диалог отдельного сообщества заказов.' : 'Пока работает резервный сценарий: сообщение можно проверить перед отправкой. После подключения Mini App заказ будет передаваться автоматически.'}</p>
+                <p className="form-note">
+                  {orderError || (orderCopied
+                    ? 'Текст заказа скопирован — вставьте его в диалог отдельного сообщества заказов.'
+                    : ORDER_API_URL
+                      ? 'Откроется Mini App ВКонтакте. После разрешения сообщество само пришлёт заказ в диалог.'
+                      : 'Пока работает резервный сценарий: текст заказа копируется, а затем открывается диалог сообщества.')}
+                </p>
+                {(orderCopied || fallbackMessage || orderError) && (
+                  <a className="fallback-dialog-link" href={VK_ORDER_DIALOG_URL} target="_blank" rel="noreferrer">
+                    Открыть диалог сообщества
+                  </a>
+                )}
+                {fallbackMessage && (
+                  <div className="fallback-order" role="status">
+                    <label htmlFor="fallback-order-text">Текст заказа для ручной отправки</label>
+                    <textarea id="fallback-order-text" readOnly rows={10} value={fallbackMessage} />
+                    <button type="button" onClick={copyFallbackMessage}>Скопировать текст заказа</button>
+                  </div>
+                )}
               </form>
             )}
           </aside>

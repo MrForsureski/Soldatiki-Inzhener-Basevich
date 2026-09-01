@@ -1,5 +1,6 @@
 # dependencies
 /node_modules
+**/node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -10,10 +11,14 @@
 
 # testing
 /coverage
+**/coverage/
 
 # next.js
 /.next/
+**/.next/
 /.vinext/
+**/.vite/
+**/.wrangler/
 /out/
 
 # misc
@@ -29,12 +34,14 @@ yarn-error.log*
 # local environment
 .env*
 !.env.example
+!services/**/.env.example
 
 # deployment and generated files
 .vercel
 next-env.d.ts
 *.tsbuildinfo
 /dist/
+services/*/dist/
 /.wrangler/
 /outputs/
 /work/
